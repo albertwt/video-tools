@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Kon Knueppel reel, draft 1: punch-in on the court, 4 timed captions, original arena audio."""
-import subprocess, os
+import subprocess, os, sys
 from PIL import Image, ImageDraw, ImageFont
 
-SRC = "/root/.claude/uploads/cd106a21-0c49-573d-9b40-d6e22f38828b/d85c05bc-IMG_5826.MOV"
-FONT = os.path.expanduser("~/.claude/skills/famous-reel-editor/assets/fonts/Montserrat-VariableFont_wght.ttf")
+SRC = sys.argv[1] if len(sys.argv) > 1 else "/root/.claude/uploads/cd106a21-0c49-573d-9b40-d6e22f38828b/d85c05bc-IMG_5826.MOV"
+HERE = os.path.dirname(os.path.abspath(__file__))
+FONT = os.path.join(HERE, "..", ".claude", "skills", "talking-head-captions", "assets", "fonts", "Montserrat-VariableFont_wght.ttf")
 EMOJI = "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf"
-D = "/home/user/reels/kon"
+D = sys.argv[2] if len(sys.argv) > 2 else "/home/user/reels/kon"
 CAP = f"{D}/edit/caps"; os.makedirs(CAP, exist_ok=True); os.makedirs(f"{D}/renders", exist_ok=True)
 W, H, FPS = 1080, 1920, 30
 DUR = 9.88

@@ -12,8 +12,15 @@ Claude will pick this repo and load the skill in here each time I need "talking-
 `game-clips/` holds the ffmpeg + Python scripts behind two finished reels:
 - `big-miss.py`: punch-in, captions, half-speed replay with a freeze on the miss, comment CTA
 - `kon-knueppel.py`: crowd clip, punch-in, timed captions with color emoji, arena audio only
-They have hard-coded paths and times from those clips. Once there are 2-3 more, turn the pattern
-into a `game-clip-editor` skill.
+
+Run: `python3 game-clips/<script>.py <clip.mov> <output-folder>`. The output folder needs `edit/` inside it;
+the video lands in `<output-folder>/renders/`. They use the font in the caption skill, so nothing else is needed.
+`big-miss.py` adds music only if `MUSIC=/path/to/licensed-track.m4a` is set.
+Crop boxes, cut times and caption lines are still hard-coded for those two clips.
+
+**Next:** once there are 2-3 more game clips, turn this pattern into `.claude/skills/game-clip-editor/`
+in this repo. Inputs per clip: the video + what happens and roughly when + the caption lines (or the story,
+and Claude drafts them). No voiceover needed.
 
 ## Setup
 `setup.sh` installs `faster-whisper` and pre-downloads the model. The cloud environment runs it

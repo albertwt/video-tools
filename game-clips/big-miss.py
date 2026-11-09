@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Big-miss reel: punch-in, captions, slow-mo replay with freeze, CTA. ffmpeg + PIL only."""
-import subprocess, os
+import subprocess, os, sys
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
-SRC = "/root/.claude/uploads/cd106a21-0c49-573d-9b40-d6e22f38828b/1974fdc4-big_miss_oop-1.mov"
-FONT = os.path.expanduser("~/.claude/skills/famous-reel-editor/assets/fonts/Montserrat-VariableFont_wght.ttf")
-MUSIC = os.path.expanduser("~/.claude/skills/famous-reel-editor/assets/bg-music.m4a")
-D = "/home/user/reels/big-miss"
+SRC = sys.argv[1] if len(sys.argv) > 1 else "/root/.claude/uploads/cd106a21-0c49-573d-9b40-d6e22f38828b/1974fdc4-big_miss_oop-1.mov"
+HERE = os.path.dirname(os.path.abspath(__file__))
+FONT = os.path.join(HERE, "..", ".claude", "skills", "talking-head-captions", "assets", "fonts", "Montserrat-VariableFont_wght.ttf")
+MUSIC = os.environ.get("MUSIC")  # optional: path to a licensed track; no music if unset
+D = sys.argv[2] if len(sys.argv) > 2 else "/home/user/reels/big-miss"
 CAP = f"{D}/edit/caps"; os.makedirs(CAP, exist_ok=True); os.makedirs(f"{D}/renders", exist_ok=True)
 W, H, FPS = 1080, 1920, 30
 RED, ACC = (255, 90, 90), (47, 224, 129)
@@ -87,11 +88,12 @@ afc = (
     "anullsrc=r=48000:cl=stereo,atrim=0:5.7[aB];"
     "[0:a]atrim=6.9:8.05,asetpts=PTS-STARTPTS,aresample=48000,apad=pad_dur=1.9[aC];"
     "[aA][aB][aC]concat=n=3:v=0:a=1,aformat=channel_layouts=stereo,volume=1.0[orig];"
-    f"[1:a]atrim=0:{TOTAL},asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo,"
-    f"volume=0.35,afade=t=out:st={TOTAL - 1.2}:d=1.2[mus];"
-    "[orig][mus]amix=inputs=2:normalize=0:duration=first,alimiter=limit=0.891:level=false[aout]"
+    + (f"[1:a]atrim=0:{TOTAL},asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo,"
+       f"volume=0.35,afade=t=out:st={TOTAL - 1.2}:d=1.2[mus];"
+       "[orig][mus]amix=inputs=2:normalize=0:duration=first,alimiter=limit=0.891:level=false[aout]"
+       if MUSIC else "[orig]alimiter=limit=0.891:level=false[aout]")
 )
-run(["ffmpeg", "-v", "error", "-y", "-i", SRC, "-i", MUSIC, "-filter_complex", afc,
+run(["ffmpeg", "-v", "error", "-y", "-i", SRC] + (["-i", MUSIC] if MUSIC else []) + ["-filter_complex", afc,
      "-map", "[aout]", "-t", str(TOTAL), "-c:a", "aac", "-b:a", "192k", f"{D}/edit/audio.m4a"])
 
 # ---- join video (concat filter, sample-accurate) + mux audio ----
