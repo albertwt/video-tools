@@ -49,7 +49,7 @@ Tell the user to confirm in the platform's upload preview.
 - **Sequence:** if the user is changing their own edit (hook, timing), they export that FIRST, then caption. Burned-in captions don't survive re-editing.
 - **Re-exports:** `transcribe.py` stores an `audio_md5` and skips work when the audio is identical. Still re-run `inspect.py window` for overlays, since visuals may have moved.
 - **Don't cover data:** the first render put a caption over the bottom row of an odds strip. Always sample a frame inside each overlay window.
-- **Phrase splitting:** auto chunks split at punctuation and pauses first, then cut long phrases into even pieces. Splitting purely on word count gave orphans like "pretty / fair.". Set `starts` by hand only if a break still reads badly.
+- **Phrase splitting:** auto chunks split at punctuation and pauses first, then cut long phrases into even pieces. Splitting purely on word count gave orphans like "pretty / fair.". Use `keep_together` for a phrase that must stay on one line (e.g. the CTA); an overlong caption shrinks to fit. Set `starts` by hand only if a break still reads badly.
 - **Whisper on a phone mic is reliable** for this kind of content. `large-v3` got 78/78 words with only formatting fixes needed.
 
 ## Worked example (the Grizzlies video)

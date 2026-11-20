@@ -12,6 +12,7 @@ config.json (every key optional):
   "fixes": {"500": ".500", "strength schedule": "strength of schedule"},  # whole-word fixes ("6 -0"/"38 .5" are auto-joined)
   "starts": [0, 4, 6],            # optional hand-set chunk start word indices (overrides auto chunking)
   "avoid": [{"from": 8.83, "to": 11.53, "y": 0.78}],               # move captions while an overlay is up
+  "keep_together": ["Comment below what you think."],              # never split these phrases
   "highlight_numbers": true,      # numbers in yellow
   "box_opacity": 200
 }
@@ -88,6 +89,15 @@ def text_of(a, b):
     return " ".join(w["text"] for w in words[a:b])
 
 starts = C["starts"] or auto_starts()
+
+# "keep_together": ["Comment below what you think."] -> never split those words across captions
+def norm(t): return re.sub(r"[^\w']", "", t.lower())
+for phrase in C.get("keep_together", []):
+    pw = [norm(x) for x in phrase.split()]
+    for i in range(len(words) - len(pw) + 1):
+        if [norm(w["text"]) for w in words[i:i + len(pw)]] == pw:
+            starts = [s for s in starts if not (i < s < i + len(pw))]
+            if i not in starts: starts = sorted(starts + [i])
 chunks = []
 for k, a in enumerate(starts):
     b = starts[k + 1] if k + 1 < len(starts) else len(words)
@@ -99,8 +109,8 @@ def y_for(t0, t1):
         if t0 < r["to"] and t1 > r["from"]: return r["y"]
     return C["y"]
 
-def font():
-    f = ImageFont.truetype(FONT, C["size"])
+def font(size=None):
+    f = ImageFont.truetype(FONT, size or C["size"])
     try: f.set_variation_by_axes([800])
     except Exception: pass
     return f
@@ -111,7 +121,10 @@ for i, (text, t0, t1) in enumerate(chunks):
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(img); f = font()
     toks = text.split(" "); sp = d.textlength(" ", font=f)
     ws = [d.textlength(t, font=f) for t in toks]; tw = sum(ws) + sp * (len(toks) - 1)
-    if tw > W - 80: print(f"WARNING chunk {i} too wide ({tw:.0f}px): '{text}' - lower max_chars or size")
+    if tw > W - 110:  # too wide for one line: shrink this caption only
+        f = font(int(C["size"] * (W - 110) / tw)); sp = d.textlength(" ", font=f)
+        ws = [d.textlength(t, font=f) for t in toks]; tw = sum(ws) + sp * (len(toks) - 1)
+        print(f"note: chunk {i} shrunk to fit: '{text}'")
     asc, desc = f.getmetrics(); th = asc + desc
     x = (W - tw) / 2; y = y_for(t0, t1) * H - th / 2
     d.rounded_rectangle([x - 26, y - 14, x + tw + 26, y + th + 14], radius=18, fill=(0, 0, 0, C["box_opacity"]))
