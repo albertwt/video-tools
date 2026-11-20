@@ -3,6 +3,16 @@ creating social media content captions via claude
 
 Claude will pick this repo and load the skill in here each time I need "talking-head-captions"
 
+## Starting a new video (next session)
+1. Start a session on this repo (the "Test" environment installs Whisper automatically).
+2. Attach your files in chat. For big ones on Google Drive, set sharing to **"Anyone with the link"** and paste
+   the link (the Drive connector alone can't pull large videos).
+3. Say what you want, for example:
+   - "caption this"
+   - "new video, use the Rock vs Evo brief as a template, here's my brief: ..."
+   - No brief yet? Fill in `briefs/_TEMPLATE.md` first.
+4. Download the finished video from the chat; the session's files are deleted when it ends.
+
 ## Skills (load automatically when a Claude Code session starts with this repo)
 - `.claude/skills/talking-head-captions/`: word-timed captions for vertical talking-head videos with
   free local Whisper. Avoids the face, on-screen overlays and the TikTok/IG UI.
